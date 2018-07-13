@@ -8,7 +8,6 @@
 #include <netdb.h>
 #include <ctype.h>
 
-#define SERVER_PORT 5438
 #define MAX_PENDING 5
 #define MAX_LINE 256
 
@@ -466,13 +465,24 @@ int canStringBeConvertedToInteger(char *str)
     return 1;
 }
 
-int main()
+int main(int argc, char * argv[])
 {
     struct sockaddr_in sin;
     char buf[MAX_LINE];//="  list |        |       |    |      |    ";
     int len;
     int s, new_s;
     int option = 1;
+    int SERVER_PORT;
+
+    if (argc==2)
+    {
+        SERVER_PORT = atoi(argv[1]);
+    }
+    else
+    {
+        fprintf(stderr, "usage: server <port>\n");
+        exit(1);
+    }
 
     /*build address data structure*/
     bzero((char *)&sin, sizeof(sin));
@@ -486,15 +496,17 @@ int main()
     /*setup passive open*/
     if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0)
     {
-        perror("simplex-talk: socket");
+        perror("ERROR: socket()");
         exit(1);
     }
 
     if ((bind(s, (struct sockaddr *)&sin, sizeof(sin))) < 0)
     {
-        perror("simplex-talk: bind");
+        perror("ERROR: bind()");
         exit(1);
     }
+
+    fprintf(stderr, "INFO: Server started at port %d\n", SERVER_PORT);
 
     listen(s, MAX_PENDING);
 
@@ -503,7 +515,7 @@ int main()
     {
         if ((new_s = accept(s, (struct sockaddr *)&sin, &len)) < 0)
         {
-            perror("simplex-talk: accept");
+            perror("ERROR: accept()");
             exit(1);
         }
         else
